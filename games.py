@@ -15,18 +15,41 @@ def gameWithLifeAnimTick():
                     disp_ram['canvas'][bi+i][bj+j]=int(boom[fnum[uram['aframe']]].split()[i][j])
             uram['aframe']+=1
             if uram['aframe']==32:
+                for i in range(5):
+                    for j in range(5):
+                        disp_ram['canvas'][bi+i][bj+j]=0
                 uram['aframe']=0
+                uram['anim_t']=0
                 if uram['life']==0:
                     uram['anim']='slowcl'
+                    sound.play('gameover')
                 else:
                     uram['anim']='fastcl'
+                return
         
         uram['anim_t']+=1
-    elif uram['anim']=='fastcl':
-        uram['anim']=None
-        return 1
-    
-
+    elif uram['anim']:
+        if uram['anim_t']%(5 if uram['anim']=='fastcl' else 35)==0:
+            if uram['aframe']<=19:
+                disp_ram['canvas'][19-uram['aframe']]=[1]*10
+            else:
+                disp_ram['canvas'][uram['aframe']-20]=[0]*10
+            uram['aframe']+=1
+        if uram['aframe']==40:
+            uram['anim']=None
+            uram['anim_t']=0
+            uram['aframe']=0
+            return 1
+        uram['anim_t']+=1
+def draw_ship():
+    pos=uram['pos']
+    disp_ram['canvas'][18:]=[[0]*10 for _ in range(2)]
+    disp_ram['canvas'][18][pos]=1
+    disp_ram['canvas'][19][pos]=1
+    if pos>0:
+        disp_ram['canvas'][19][pos-1]=1
+    if pos<9:
+        disp_ram['canvas'][19][pos+1]=1
 
 def openSceneTick():
     global uram
@@ -41,7 +64,6 @@ def openSceneTick():
         shared_ram['state']=1
         return
     if inp['s/p']:
-        sound.play('start')
         shared_ram['state']=2
         uram.clear()
         return
@@ -99,7 +121,6 @@ def selectSceneTick():
         if shared_ram['speed']>10:
             shared_ram['speed']=1
     if inp['s/p']:
-        sound.play('start')
         shared_ram['state']=2
         uram.clear()
         return
@@ -140,36 +161,48 @@ def gameCarRoadTick():
     pass
 def gameShootingTick():
     global uram
+    #初始化
     if not uram:
         uram.update({'pos':4,'life':4,'t':0,'bullet':-2,'bcol':-1,'anim':None,'anim_t':0,'boom_pos':(0,0),
                      'aframe':0})
         disp_ram['canvas'] = [[0]*10 for _ in range(20)]
+        disp_ram['subcanvas']=[1]*4+[0]*4
+        draw_ship()
+        sound.play('start',True)
         return
+    #播放动画
     if uram['anim']:
         if gameWithLifeAnimTick():
             if not uram['life']:
                 uram.clear()
                 shared_ram['state']=1
             else:
-                sound.play('start')
+                uram['pos']=4
+                draw_ship()
+                sound.play('start',True)
         return
-
+    if not sound.getidle():
+        return
+    #响应按键
+    redraw=False
     if hold('L'):
         sound.play('move')
         uram['pos'] = max(0,uram['pos']-1)
+        draw_ship()
     if hold('R'):
         sound.play('move')
         uram['pos'] = min(9,uram['pos']+1)
-
+        draw_ship()
     if hold('shift') and uram['bullet']<0:
         sound.play('hit')
         uram['bullet']=17
         uram['bcol']=uram['pos']
-    pos=uram['pos']
+
+    #处理事件
     if uram['bullet']>=-1:
         y,x=uram['bullet'],uram['bcol']
         if disp_ram['canvas'][y][x]==1 or y==-1:
-            for yy in range(17,y-1,-1):
+            for yy in range(17,max(y-1,-1),-1):
                 disp_ram['canvas'][yy][x]=0
             if uram['bullet']!=-1:
                 shared_ram['score']+=1
@@ -178,24 +211,20 @@ def gameShootingTick():
             disp_ram['canvas'][y][x]=1
             uram['bullet']-=1
     elif uram['t']>=100:
-        for y in range(18,0,-1):
-            disp_ram['canvas'][y]=disp_ram['canvas'][y-1]
-        disp_ram['canvas'][0] = [1 if random.random() < 0.3 else 0 for _ in range(10)]
-        if any(disp_ram['canvas'][18][x] == 1 for x in range(10)):
+        if any(disp_ram['canvas'][17][x] == 1 for x in range(10)):
             uram['life']-=1
+            disp_ram['subcanvas'][uram['life']]=0
             uram['anim']='boom'
-            uram['boom_pos']=(15,max(0,min(5,pos-1)))
+            uram['boom_pos']=(15,max(0,min(5,uram['pos']-1)))
             uram['anim_t']=0
             uram['bullet']=-1
             sound.play('boom')
+        for x in range(10):
+            disp_ram['canvas'][18][x]|=disp_ram['canvas'][17][x]
+        for y in range(17,0,-1):
+            disp_ram['canvas'][y]=disp_ram['canvas'][y-1]
+        disp_ram['canvas'][0] = [1 if random.random() < 0.3 else 0 for _ in range(10)]
         uram['t']=0
-    disp_ram['canvas'][18:]=[[0]*10 for _ in range(2)]
-    disp_ram['canvas'][18][pos]=1
-    disp_ram['canvas'][19][pos]=1
-    if pos>0:
-        disp_ram['canvas'][19][pos-1]=1
-    if pos<9:
-        disp_ram['canvas'][19][pos+1]=1
 
     uram['t']+=1
     

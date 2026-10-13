@@ -24,5 +24,5 @@ inp={#记录按键按下的帧数
 }
 disp_ram={
     'canvas':[[0 for _ in range(10)] for _ in range(20)],
-    'subcanvas':[1 for _ in range(8)],#显示剩余生命、即将出现的方块等
+    'subcanvas':[0 for _ in range(8)],#显示剩余生命、即将出现的方块等
 }
