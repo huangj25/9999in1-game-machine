@@ -3,8 +3,6 @@ from RAM import *
 import sound
 import random
 
-def hold(key,delay=100,loop=50):
-    return inp[key]==1 or (inp[key]>delay and (inp[key]-delay)%loop==0)
 def gameWithLifeAnimTick():
     if uram['anim']=='boom':
         if uram['anim_t']%20==0:
@@ -58,12 +56,12 @@ def openSceneTick():
         uram.update({'step':1,'sleep':0,'blink':0,'r':19,'c':0})
         for r in range(20):
             disp_ram['canvas'][r][:]=map(int,open_logo[r])
-    if inp['U'] or inp['D'] or inp['L'] or inp['R'] or inp['shift']:
+    if inp[0] in ['U','D','L','R','Us','Ds','Ls','Rs'] or inp[2]:
         sound.play('pagedown')
         uram.clear()
         shared_ram['state']=1
         return
-    if inp['s/p']:
+    if inp[0]=='s/p':
         shared_ram['state']=2
         uram.clear()
         return
@@ -98,10 +96,12 @@ def selectSceneTick():
             'abstep':0,
             'demosleep':0,
             'demostep':0,
-            'map':shared_ram['selected']
+            'map':shared_ram['selected'],
+            'shiftsleep':100,
+            'keysleep':100
         })
         disp_ram['canvas']=[[0 for _ in range(10)] for _ in range(20)]
-    if hold('shift'):
+    if inp[2] and not uram['shiftsleep']:
         sound.play('pagedown')
         shared_ram['selected']+=1
         if shared_ram['selected']==26:
@@ -110,17 +110,21 @@ def selectSceneTick():
         if shared_ram['version']>versions[uram['map']]:
             shared_ram['version']=1
         uram.update({'absleep':0,'abstep':0,'demosleep':0,'demostep':0})
-    if hold('L'):
+        uram['shiftsleep']=50 if inp[3] else 100
+            
+    if inp[0]=='L' and not uram['keysleep']:
         sound.play('pagedown')
         shared_ram['level']+=1
         if shared_ram['level']>10:
             shared_ram['level']=1
-    if hold('R'):
+        uram['keysleep']=50 if inp[1] else 100
+    elif inp[0]=='R' and not uram['keysleep']:
         sound.play('pagedown')
         shared_ram['speed']+=1
         if shared_ram['speed']>10:
             shared_ram['speed']=1
-    if inp['s/p']:
+        uram['keysleep']=50 if inp[1] else 100
+    elif inp[0]=='s/p':
         shared_ram['state']=2
         uram.clear()
         return
@@ -147,6 +151,10 @@ def selectSceneTick():
         if uram['demostep']==4:
             uram['demostep']=0
         uram['demosleep']=300
+    if uram['keysleep']:
+        uram['keysleep']-=1
+    if uram['shiftsleep']:
+        uram['shiftsleep']-=1
 def gameTankWarTick():
     pass
 def gamePingPongTick():
@@ -164,7 +172,7 @@ def gameShootingTick():
     #初始化
     if not uram:
         uram.update({'pos':4,'life':4,'t':0,'bullet':-2,'bcol':-1,'anim':None,'anim_t':0,'boom_pos':(0,0),
-                     'aframe':0})
+                     'aframe':0,'keysleep':0,'shiftsleep':0})
         disp_ram['canvas'] = [[0]*10 for _ in range(20)]
         disp_ram['subcanvas']=[1]*4+[0]*4
         draw_ship()
@@ -174,6 +182,8 @@ def gameShootingTick():
     if uram['anim']:
         if gameWithLifeAnimTick():
             if not uram['life']:
+                if shared_ram['score']>shared_ram['hi-score']:
+                    shared_ram['hi-score']=shared_ram['score']
                 uram.clear()
                 shared_ram['state']=1
             else:
@@ -196,7 +206,7 @@ def gameShootingTick():
         else:
             disp_ram['canvas'][y][x]=1
             uram['bullet']-=1
-    elif uram['t']>=150:
+    elif uram['t']>=400-28*(shared_ram['speed']-1):
         if any(disp_ram['canvas'][17][x] == 1 for x in range(10)):
             uram['life']-=1
             disp_ram['subcanvas'][uram['life']]=0
@@ -213,22 +223,29 @@ def gameShootingTick():
         uram['t']=0
     else:
         #响应按键
-        if hold('L',50,20):
+        if inp[0]=='L' and not uram['keysleep']:
             if uram['pos']>0:
                 uram['pos']=uram['pos']-1
                 sound.play('move')
                 draw_ship()
-        if hold('R',50,20):
+            uram['keysleep']=20 if inp[1] else 100
+        if inp[0]=='R' and not uram['keysleep']:
             if uram['pos']<9:
                 uram['pos']=uram['pos']+1
                 sound.play('move')
                 draw_ship()
-        if hold('shift'):
+            uram['keysleep']=20 if inp[1] else 100
+        if inp[2] and not uram['shiftsleep']:
             sound.play('hit')
             uram['bullet']=17
             uram['bcol']=uram['pos']
+            uram['shiftsleep']=50 if inp[3] else 70
 
     uram['t']+=1
+    if uram['keysleep']:
+        uram['keysleep']-=1
+    if uram['shiftsleep']:
+        uram['shiftsleep']-=1
 
 def gameFillingTick():
     pass

@@ -22,7 +22,17 @@ key_dict={
     pygame.K_1:'s/p',
     pygame.K_2:'on/off'
 }
-
+pressed={
+    'L':False,
+    'R':False,
+    'U':False,
+    'D':False,
+    'shift':False,
+    's/p':False,
+    'on/off':False,
+    'reset':False,
+    'sound':False
+}
 gameTickFun=[gameShootingTick]
 while True:
     for event in pygame.event.get():
@@ -35,11 +45,28 @@ while True:
         elif event.type==pygame.KEYUP:
             if key_dict.get(event.key):
                 pressed[key_dict[event.key]]=False
+    #shift键单独处理
+    if pressed['shift']:
+        if inp[2]:
+            inp[3]=True
+        else:
+            inp[2]=True
+    else:
+        inp[2]=inp[3]=False
+    #处理其他按键
+    keyflip=set()
     for key in pressed:
-        if pressed[key]:
-            inp[key]+=1
-        elif inp[key]:
-            inp[key]=0
+        if pressed[key] and key!='shift':
+            keyflip|={key}
+    key_now=''
+    if len(keyflip)==1:
+        key_now=keyflip.pop()
+    if key_now and key_now==inp[0]:
+        inp[1]=True
+    else:
+        inp[0]=key_now
+        inp[1]=False
+
     if shared_ram['state']==0:
         openSceneTick()
     elif shared_ram['state']==1:

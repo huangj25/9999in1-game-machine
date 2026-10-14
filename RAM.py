@@ -11,29 +11,9 @@ shared_ram={
     'hi-score':0,
 }
 uram={}
-inp={#记录按键按下的帧数
-    'L':0,
-    'R':0,
-    'U':0,
-    'D':0,
-    'shift':0,
-    's/p':0,
-    'on/off':0,
-    'reset':0,
-    'sound':0
-}
+inp=['',False,False,False]#key, hold, shift, hold
 disp_ram={
     'canvas':[[0 for _ in range(10)] for _ in range(20)],
     'subcanvas':[0 for _ in range(8)],#显示剩余生命、即将出现的方块等
 }
-pressed={
-    'L':False,
-    'R':False,
-    'U':False,
-    'D':False,
-    'shift':False,
-    's/p':False,
-    'on/off':False,
-    'reset':False,
-    'sound':False
-}
+
