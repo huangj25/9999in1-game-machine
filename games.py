@@ -48,6 +48,13 @@ def draw_ship():
         disp_ram['canvas'][19][pos-1]=1
     if pos<9:
         disp_ram['canvas'][19][pos+1]=1
+def draw_digit(n,bi,bj):
+    a=n//10
+    b=n%10
+    for i in range(5):
+        for j in range(3):
+            disp_ram['canvas'][bi+i][bj+j]=int(digit_map[a].split()[i][j])
+            disp_ram['canvas'][bi+i][bj+j+4]=int(digit_map[b].split()[i][j])
 
 def openSceneTick():
     global uram
@@ -101,6 +108,7 @@ def selectSceneTick():
             'keysleep':100
         })
         disp_ram['canvas']=[[0 for _ in range(10)] for _ in range(20)]
+        draw_digit(shared_ram['version'],15,1)
     if inp[2] and not uram['shiftsleep']:
         sound.play('pagedown')
         shared_ram['selected']+=1
@@ -111,23 +119,42 @@ def selectSceneTick():
             shared_ram['version']=1
         uram.update({'absleep':0,'abstep':0,'demosleep':0,'demostep':0})
         uram['shiftsleep']=50 if inp[3] else 100
+    elif not inp[2]:
+        uram['shiftsleep']=0
             
     if inp[0]=='L' and not uram['keysleep']:
         sound.play('pagedown')
         shared_ram['level']+=1
         if shared_ram['level']>10:
             shared_ram['level']=1
-        uram['keysleep']=50 if inp[1] else 100
+        uram['keysleep']=70 if inp[1] else 300
     elif inp[0]=='R' and not uram['keysleep']:
         sound.play('pagedown')
         shared_ram['speed']+=1
         if shared_ram['speed']>10:
             shared_ram['speed']=1
-        uram['keysleep']=50 if inp[1] else 100
+        uram['keysleep']=70 if inp[1] else 300
+    elif inp[0]=='U' and not uram['keysleep']:
+        sound.play('pagedown')
+        shared_ram['version']+=1
+        if shared_ram['version']>versions[uram['map']]:
+            shared_ram['version']=1
+        uram['keysleep']=70 if inp[1] else 300
+        draw_digit(shared_ram['version'],15,1)
+    elif inp[0]=='D' and not uram['keysleep']:
+        sound.play('pagedown')
+        shared_ram['version']-=1
+        if shared_ram['version']==0:
+            shared_ram['version']=versions[uram['map']]
+        uram['keysleep']=70 if inp[1] else 300
+        draw_digit(shared_ram['version'],15,1)
     elif inp[0]=='s/p':
         shared_ram['state']=2
         uram.clear()
         return
+    elif not inp[0]:
+        uram['keysleep']=0
+
     if uram['absleep']:
         uram['absleep']-=1
     else:
@@ -229,17 +256,21 @@ def gameShootingTick():
                 sound.play('move')
                 draw_ship()
             uram['keysleep']=20 if inp[1] else 100
-        if inp[0]=='R' and not uram['keysleep']:
+        elif inp[0]=='R' and not uram['keysleep']:
             if uram['pos']<9:
                 uram['pos']=uram['pos']+1
                 sound.play('move')
                 draw_ship()
             uram['keysleep']=20 if inp[1] else 100
+        elif not inp[0]:
+            uram['keysleep']=0
         if inp[2] and not uram['shiftsleep']:
             sound.play('hit')
             uram['bullet']=17
             uram['bcol']=uram['pos']
             uram['shiftsleep']=50 if inp[3] else 70
+        elif not inp[2]:
+            uram['shiftsleep']=0
 
     uram['t']+=1
     if uram['keysleep']:
