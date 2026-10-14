@@ -1,8 +1,12 @@
 from display import Screen
 from games import *
 import pygame,time
+import ctypes
 pygame.font.init()
 screen=pygame.display.set_mode((160,208))
+hwnd = pygame.display.get_wm_info()['window']
+imm32 = ctypes.WinDLL('imm32')
+imm32.ImmAssociateContext(hwnd, 0)
 scr=Screen(screen)
 key_dict={
     pygame.K_w:'U',
@@ -18,17 +22,7 @@ key_dict={
     pygame.K_1:'s/p',
     pygame.K_2:'on/off'
 }
-pressed={
-    'L':False,
-    'R':False,
-    'U':False,
-    'D':False,
-    'shift':False,
-    's/p':False,
-    'on/off':False,
-    'reset':False,
-    'sound':False
-}
+
 gameTickFun=[gameShootingTick]
 while True:
     for event in pygame.event.get():

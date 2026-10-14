@@ -183,21 +183,7 @@ def gameShootingTick():
         return
     if not sound.getidle():
         return
-    #响应按键
-    redraw=False
-    if hold('L'):
-        sound.play('move')
-        uram['pos'] = max(0,uram['pos']-1)
-        draw_ship()
-    if hold('R'):
-        sound.play('move')
-        uram['pos'] = min(9,uram['pos']+1)
-        draw_ship()
-    if hold('shift') and uram['bullet']<0:
-        sound.play('hit')
-        uram['bullet']=17
-        uram['bcol']=uram['pos']
-
+    
     #处理事件
     if uram['bullet']>=-1:
         y,x=uram['bullet'],uram['bcol']
@@ -210,7 +196,7 @@ def gameShootingTick():
         else:
             disp_ram['canvas'][y][x]=1
             uram['bullet']-=1
-    elif uram['t']>=100:
+    elif uram['t']>=150:
         if any(disp_ram['canvas'][17][x] == 1 for x in range(10)):
             uram['life']-=1
             disp_ram['subcanvas'][uram['life']]=0
@@ -225,10 +211,25 @@ def gameShootingTick():
             disp_ram['canvas'][y]=disp_ram['canvas'][y-1]
         disp_ram['canvas'][0] = [1 if random.random() < 0.3 else 0 for _ in range(10)]
         uram['t']=0
+    else:
+        #响应按键
+        if hold('L',50,20):
+            if uram['pos']>0:
+                uram['pos']=uram['pos']-1
+                sound.play('move')
+                draw_ship()
+        if hold('R',50,20):
+            if uram['pos']<9:
+                uram['pos']=uram['pos']+1
+                sound.play('move')
+                draw_ship()
+        if hold('shift'):
+            sound.play('hit')
+            uram['bullet']=17
+            uram['bcol']=uram['pos']
 
     uram['t']+=1
-    
-    
+
 def gameFillingTick():
     pass
 def gameSnakeTick():
