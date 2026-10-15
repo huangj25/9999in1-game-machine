@@ -8,6 +8,7 @@ hwnd = pygame.display.get_wm_info()['window']
 imm32 = ctypes.WinDLL('imm32')
 imm32.ImmAssociateContext(hwnd, 0)
 scr=Screen(screen)
+clock = pygame.time.Clock()
 key_dict={
     pygame.K_w:'U',
     pygame.K_a:'L',
@@ -34,6 +35,8 @@ pressed={
     'sound':False
 }
 gameTickFun=[gameShootingTick]
+count=0
+oldtime=time.time()
 while True:
     for event in pygame.event.get():
         if event.type==pygame.QUIT:
@@ -74,4 +77,12 @@ while True:
     else:
         gameTickFun[shared_ram['selected']]()
     scr.draw(disp_ram,shared_ram)
-    time.sleep(0.002)
+    clock.tick(400)
+    
+##    count+=1
+##    if count==400:
+##        newtime=time.time()
+##        print(400//(newtime-oldtime))
+##        oldtime=newtime
+##        count=0
+    
