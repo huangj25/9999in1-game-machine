@@ -198,10 +198,14 @@ def gameShootingTick():
     global uram
     #初始化
     if not uram:
-        uram.update({'pos':4,'life':4,'t':0,'bullet':-2,'bcol':-1,'anim':None,'anim_t':0,'boom_pos':(0,0),
+        uram.update({'pos':4,'life':4,'t':0,'b1':-2,'b1col':-1,
+                     'b2':-2,'b2col':-1,'anim':None,'anim_t':0,'boom_pos':(0,0),
                      'aframe':0,'keysleep':0,'shiftsleep':0})
         disp_ram['canvas'] = [[0]*10 for _ in range(20)]
+        for i in range(shared_ram['level']-1):
+            disp_ram['canvas'][i]=[random.randint(0,1) for _ in range(10)]
         disp_ram['subcanvas']=[1]*4+[0]*4
+        disp_ram['vertical_flip']=(shared_ram['version']-1)//2
         draw_ship()
         sound.play('start',True)
         return
@@ -212,9 +216,12 @@ def gameShootingTick():
                 if shared_ram['score']>shared_ram['hi-score']:
                     shared_ram['hi-score']=shared_ram['score']
                 uram.clear()
+                disp_ram['vertical_flip']=False
                 shared_ram['state']=1
             else:
                 uram['pos']=4
+                for i in range(shared_ram['level']-1):
+                    disp_ram['canvas'][i]=[random.randint(0,1) for _ in range(10)]
                 draw_ship()
                 sound.play('start',True)
         return
@@ -222,31 +229,33 @@ def gameShootingTick():
         return
     
     #处理事件
-    if uram['bullet']>=-1:
-        y,x=uram['bullet'],uram['bcol']
-        if disp_ram['canvas'][y][x]==1 or y==-1:
-            for yy in range(17,max(y-1,-1),-1):
-                disp_ram['canvas'][yy][x]=0
-            if uram['bullet']!=-1:
-                shared_ram['score']+=1
-            uram['bullet']=-2
-        else:
-            disp_ram['canvas'][y][x]=1
-            uram['bullet']-=1
-    elif uram['t']>=400-28*(shared_ram['speed']-1):
+    for b in ['b1','b2']:
+        if uram[b]>=-1:
+            y,x=uram[b],uram[b+'col']
+            if disp_ram['canvas'][y][x]==1 or y==-1:
+                for yy in range(17,max(y-1,-1),-1):
+                    disp_ram['canvas'][yy][x]=0
+                if uram[b]!=-1:
+                    shared_ram['score']+=1
+                uram[b]=-2
+            else:
+                disp_ram['canvas'][y][x]=1
+                uram[b]-=1
+            
+    if uram['t']>=400-28*(shared_ram['speed']-1) and (uram['b1'],uram['b2'])==(-2,-2):
         if any(disp_ram['canvas'][17][x] == 1 for x in range(10)):
             uram['life']-=1
             disp_ram['subcanvas'][uram['life']]=0
             uram['anim']='boom'
             uram['boom_pos']=(15,max(0,min(5,uram['pos']-1)))
             uram['anim_t']=0
-            uram['bullet']=-1
+            uram['b1']=uram['b2']=-2
             sound.play('boom')
         for x in range(10):
             disp_ram['canvas'][18][x]|=disp_ram['canvas'][17][x]
         for y in range(17,0,-1):
             disp_ram['canvas'][y]=disp_ram['canvas'][y-1]
-        disp_ram['canvas'][0] = [1 if random.random() < 0.3 else 0 for _ in range(10)]
+        disp_ram['canvas'][0] = [random.randint(0,1) for _ in range(10)]
         uram['t']=0
     else:
         #响应按键
@@ -266,8 +275,16 @@ def gameShootingTick():
             uram['keysleep']=0
         if inp[2] and not uram['shiftsleep']:
             sound.play('hit')
-            uram['bullet']=17
-            uram['bcol']=uram['pos']
+            if (shared_ram['version']-1)%2:
+                if uram['pos']>0:
+                    uram['b1']=17
+                    uram['b1col']=uram['pos']-1
+                if uram['pos']<9:
+                    uram['b2']=17
+                    uram['b2col']=uram['pos']+1
+            else:
+                uram['b1']=17
+                uram['b1col']=uram['pos']
             uram['shiftsleep']=50 if inp[3] else 70
         elif not inp[2]:
             uram['shiftsleep']=0

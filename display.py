@@ -20,7 +20,11 @@ class Screen():
         pygame.draw.rect(self.screen,self.bg_color,(x+1,y+1,7,7))
         pygame.draw.rect(self.screen,0,(x+2,y+2,5,5))
     def draw(self,disp_ram,shared_ram):
-        canvas,subcanvas=disp_ram['canvas'],disp_ram['subcanvas']
+        if disp_ram['vertical_flip']:
+            canvas=disp_ram['canvas'][::-1]
+        else:
+            canvas=disp_ram['canvas']
+        subcanvas=disp_ram['subcanvas']
         self.screen.blit(self.bg,(0,0))
         for i in range(20):
             for j in range(10):
