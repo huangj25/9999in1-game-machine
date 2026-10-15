@@ -301,5 +301,10 @@ def gameSnakeTick():
     pass
 def gameFrogTick():
     pass
-def gameTetrisTick():
+def gameTetrisTick(para=0):
     pass
+
+def gameTetrisWrapper(para):
+    def fun():
+        gameTetrisTick(para)
+    return fun

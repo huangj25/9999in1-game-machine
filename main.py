@@ -34,7 +34,19 @@ pressed={
     'reset':False,
     'sound':False
 }
-gameTickFun=[gameShootingTick]
+gameTickFun=[
+    gameTankWarTick,#A
+    gamePingPongTick,
+    gameAlienTick,
+    gameMarbleTick,
+    gameCarTick,
+    gameCarRoadTick,
+    gameShootingTick,
+    gameFillingTick,
+    gameSnakeTick,
+    gameFrogTick,#J
+    *(gameTetrisWrapper(i) for i in range(16))#K-Z
+    ]
 count=0
 oldtime=time.time()
 while True:
